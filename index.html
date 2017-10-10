@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>X___X</title>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+
+<div id="app" class="container">
+	<div class="row">
+		<div class="col-md-12">
+			<h1>Slim REST Generator</h1>
+			<hr>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-12">
+			<button v-on:click="selectType('GET')" class="btn btn-success">GET</button>
+			<button v-on:click="selectType('POST')" class="btn btn-primary">POST</button>
+			<button v-on:click="selectType('PUT')" class="btn btn-warning">PUT</button>
+			<button v-on:click="selectType('DELETE')" class="btn btn-danger">DELETE</button>
+			<button v-on:click="selectType('PATCH')" class="btn btn-info">PATCH</button>
+		</div>
+	</div>
+
+
+	<div v-if="type!=''" class="row">
+		<hr>
+		<div class="col-md-12">
+			<h3>{{ type }}</h3>
+			<div class="form-inline">
+				<input v-model="funName" class="form-control" placeholder="Function Name" required>
+				<button v-on:click="addParam" class="btn btn-success"> Add Param </button>
+			</div>
+			<hr>
+
+			<div  v-for="item in params" class="form-group">
+			 	<input v-model="item.name" class="form-control" placeholder="Param Name" required>
+			</div>
+
+			<div v-if="params.length > 0">
+				<button v-on:click="createApi" class="btn btn-success pull-right">Create API</button>
+			</div>
+		</div>
+	</div>
+
+
+	<div v-if="output!=''" class="row">
+		<pre v-html="output"></pre>
+	</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.4/vue.js"></script>
+<script>
+	Vue.config.silent = false
+	var app = new Vue({
+		el: '#app',
+		data: {
+			funName: '',
+			type : '',
+			params: [],
+			output: ''
+		},
+		methods: {
+			selectType: function(x){
+				this.type = x
+			},
+			addParam: function(){
+				this.params.push( { name:'', type:'TEXT' } );
+			},
+			createApi: function(){
+				app.output  = ''
+				app.output += '$app->' + app.type.toLowerCase()
+				app.output += '("{{url}}", function (Request $request, Response $response, $args) { <br>'
+
+				for( i = 0; i < app.params.length-1; i++) {
+					app.output += '	$'+ app.params[i].name +' = $request->getAttribute("'+ app.params[i].name +'");<br>'
+				}
+			
+				app.output = app.output.replace('{{url}}', 'root/'+ app.funName + '/')
+				app.output += '   $response->getBody()->write("Hello");<br>'
+				app.output += '   return $response;<br>'
+				app.output += '});<br>'
+			}
+		}
+	});
+</script>
+</body>
+</html>
