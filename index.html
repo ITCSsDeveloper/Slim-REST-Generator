@@ -125,37 +125,52 @@
 				generateCode: function () {
 					this.output = ''
 					this.output += '$app->' + this.type.toLowerCase()
-					this.output += '("{{url}}", function (Request $request, Response $response'
+					this.output += '("{{url}}", function (Request $request, Response $response {{args}}'
+					this.output += '{{try}}'
+					let newline = '\n'
 
 					if (this.type == 'GET') {
-						this.output += ', $args) { \n\n'
+						
+						this.output = this.output.replace('{{args}}', ', $args) {' + newline)
+
+						
 						for (i = 0; i < this.params.length; i++) {
 
 							if (this.filter)
-								this.output += '\t$' + this.params[i].name + ' = filter_var($request->getAttribute("' + this.params[i].name + '"), FILTER_SANITIZE_STRING);\n'
+								this.output += '\t$' + this.params[i].name + ' = filter_var($request->getAttribute("' + this.params[i].name + '"), FILTER_SANITIZE_STRING);' + newline
 							else
-								this.output += '\t$' + this.params[i].name + ' = $request->getAttribute("' + this.params[i].name + '");\n'
+								this.output += '\t$' + this.params[i].name + ' = $request->getAttribute("' + this.params[i].name + '");' + newline
 
 						}
 
 					} else if (this.type == 'POST') {
-						this.output += ') { \n\n'
-						this.output += '\t$data = $request->getParsedBody();\n'
+						this.output += ') {'+ newline
+						this.output += '\t$data = $request->getParsedBody();'+ newline
 						for (i = 0; i < this.params.length; i++) {
 
 							if (this.filter)
-								this.output += '\t$' + this.params[i].name + ' = filter_var($data["' + this.params[i].name + '"], FILTER_SANITIZE_STRING);\n'
+								this.output += '\t$' + this.params[i].name + ' = filter_var($data["' + this.params[i].name + '"], FILTER_SANITIZE_STRING);'+ newline
 							else
-								this.output += '\t$' + this.params[i].name + ' = $data["' + this.params[i].name + '"];\n'
+								this.output += '\t$' + this.params[i].name + ' = $data["' + this.params[i].name + '"];'+ newline
 						}
 
 					}
 
+					this.output += newline
+					this.output += '\t$result = [];'+ newline
+					this.output += '\treturn $response->withjson($result, 200);'+ newline
+					this.output += '{{try-end}}'
+					this.output += '});'+ newline
+
 					this.output = this.output.replace('{{url}}', this.root + '/' + this.funName + '/')
 
-					this.output += '\n\n\t$result = [];\n'
-					this.output += '\treturn $response->withjson($result, 200);\n'
-					this.output += '});\n'
+					if(this.tryCatch){
+						this.output = this.output.replace('{{try}}', '  try\n  {\n')
+						this.output = this.output.replace('{{try-end}}', '  }\n  catch(Exception $e) {\n      return $response->withjson([$e->getMessage()], 500);\n  }\n')
+					}else {
+						this.output = this.output.replace('{{try}}', '')
+						this.output = this.output.replace('{{try-end}}', '')
+					}
 
 					setTimeout(function () { Prism.highlightAll(); }, 0);
 					this.save()
@@ -180,6 +195,7 @@
 
 		if (localStorage.tempData != undefined && localStorage.tempData != "undefined") {
 			temp = JSON.parse(localStorage.tempData)
+			app._data.tryCatch = temp.tryCatch
 			app._data.autoSave = temp.autoSave
 			app._data.filter = temp.filter
 			app._data.btn = temp.btn
