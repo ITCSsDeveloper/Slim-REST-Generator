@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>X___X</title>
-	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -10,46 +10,54 @@
 	<div class="row">
 		<div class="col-md-12">
 			<h1>Slim REST Generator</h1>
-			<hr>
 		</div>
 	</div>
 
+	<hr>
 	<div class="row">
-		<div class="col-md-12">
-			<button v-on:click="selectType('GET')" class="btn btn-success">GET</button>
-			<button v-on:click="selectType('POST')" class="btn btn-primary">POST</button>
-			<button v-on:click="selectType('PUT')" class="btn btn-warning">PUT</button>
-			<button v-on:click="selectType('DELETE')" class="btn btn-danger">DELETE</button>
-			<button v-on:click="selectType('PATCH')" class="btn btn-info">PATCH</button>
+		<div class="col-md-5">
+			<div class="form-group">
+				<div class="form-inline">
+					<label>Http Method : </label>
+					<button id="btnGET"    v-on:click="selectType('GET')"    class="btn btn-default">GET</button>
+					<button id="btnPOST"   v-on:click="selectType('POST')"   class="btn btn-default">POST</button>
+					<button id="btnPUT"    v-on:click="selectType('PUT')"    class="btn btn-default">PUT</button>
+					<button id="btnDELETE" v-on:click="selectType('DELETE')" class="btn btn-default">DELETE</button>
+					<button id="btnPATCH"  v-on:click="selectType('PATCH')"  class="btn btn-default">PATCH</button>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<div class="form-inline">
+					<label>Function Name : </label>
+					<input v-model="funName" v-on:keyup="createApi" class="form-control" placeholder="Function Name" required>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<div class="form-inline">
+					<a href="#" v-on:click="addParam"><span class="glyphicon glyphicon-plus"></span> Add Parmas</a>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<div v-for="item in params" class="form-group">
+					<input v-model="item.name" v-on:keyup="createApi" class="form-control" placeholder="Param Name" required>
+				</div>
+			</div>
 		</div>
+
+		<div class="col-md-7">
+			<div class="form-group">
+				<div v-if="output!=''" class="row">
+					<pre v-html="output"></pre>
+				</div> 
+			</div>
+		</div>	
 	</div>
 
 
-	<div v-if="type!=''" class="row">
-		<hr>
-		<div class="col-md-12">
-			<h3>{{ type }}</h3>
-			<div class="form-inline">
-				<input v-model="funName" class="form-control" placeholder="Function Name" required>
-				<button v-on:click="addParam" class="btn btn-success"> Add Param </button>
-			</div>
-			<hr>
-
-			<div  v-for="item in params" class="form-group">
-			 	<input v-model="item.name" class="form-control" placeholder="Param Name" required>
-			</div>
-
-			<div v-if="params.length > 0">
-				<button v-on:click="createApi" class="btn btn-success pull-right">Create API</button>
-			</div>
-		</div>
-	</div>
-
-
-	<div v-if="output!=''" class="row">
-		<pre v-html="output"></pre>
-	</div>
-</div>
+</div> <!-- End Of Container -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.4/vue.js"></script>
 <script>
@@ -65,9 +73,11 @@
 		methods: {
 			selectType: function(x){
 				this.type = x
+				app.createApi()
 			},
 			addParam: function(){
 				this.params.push( { name:'', type:'TEXT' } );
+				app.createApi()
 			},
 			createApi: function(){
 				app.output  = ''
