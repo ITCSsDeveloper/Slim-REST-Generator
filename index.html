@@ -9,11 +9,17 @@
 		.btn {
 			width: 83.5px !important;
 		}
+
+		.data-input {
+			margin-right: 5px !important;
+			margin-left: 5px !important;
+		}
 	</style>
+
 </head>
 
 <body>
-	<div id="app" class="container">
+	<div id="app" class="container-fluid">
 		<div class="row">
 			<div class="col-md-12">
 				<h1>Slim REST Generator</h1>
@@ -25,8 +31,9 @@
 			<div class="col-md-6">
 				<div class="form-group">
 					<div class="form-inline">
-						<label>Save to Local Storage : </label>
-						<input v-model="autoSave" v-bind:id="autoSave" v-on:click="save" type="checkbox" />
+						<input v-model="autoSave" v-bind:id="autoSave" v-on:click="save" type="checkbox" class="data-input" /><label>Save to Local Storage | </label>
+						<input v-model="filter" v-bind:id="filter" v-on:click="save(); generateCode();" type="checkbox" class="data-input" /><label>Filter | </label>
+						<input v-model="tryCatch" v-bind:id="tryCatch" v-on:click="save(); generateCode();" type="checkbox" class="data-input" /><label>Try Catch | </label>
 						<button v-on:click="reset" class="btn btn-sm btn-danger pull-right">Reset</button>
 					</div>
 				</div>
@@ -39,7 +46,6 @@
 						<button v-on:click="selectType('POST')" v-bind:class="{ 'btn btn-success' : btn.POST,   'btn btn-default': !btn.POST }">POST</button>
 						<button v-on:click="selectType('PUT')" v-bind:class="{ 'btn btn-success' : btn.PUT,    'btn btn-default': !btn.PUT }">PUT</button>
 						<button v-on:click="selectType('DELETE')" v-bind:class="{ 'btn btn-success' : btn.DELETE, 'btn btn-default': !btn.DELETE }">DELETE</button>
-						<button v-on:click="selectType('PATCH')" v-bind:class="{ 'btn btn-success' : btn.PATCH,  'btn btn-default': !btn.PATCH }">PATCH</button>
 					</div>
 				</div>
 
@@ -73,7 +79,7 @@
 			<div class="col-md-6">
 				<div class="form-group">
 					<div v-if="output!=''" class="row">
-						<pre style="height: 350px;"><code class="language-php" v-html="output"></code></pre>
+						<pre style="height: 350px; width: 99%"><code class="language-php" v-html="output"></code></pre>
 					</div>
 				</div>
 			</div>
@@ -85,11 +91,15 @@
 	<script src="https://www.samclarke.com/js/prism.js"></script>
 
 	<script>
+		// https://github.com/Ahrengot/Monokai-theme-for-Prism.js
+		// https://schier.co/blog/2013/01/07/how-to-re-run-prismjs-on-ajax-content.html
 		var app = new Vue({
 			el: '#app',
 			data: {
-				autoSave: false,
-				btn: { GET: false, POST: false, PUT: false, DELETE: false, PATCH: false },
+				autoSave: true,
+				filter: false,
+				tryCatch : false,
+				btn: { GET: false, POST: false, PUT: false, DELETE: false },
 				root: '',
 				funName: '',
 				type: '',
@@ -97,43 +107,54 @@
 				output: ''
 			},
 			methods: {
-				toggleAutoSave: function () {
-					if (autoSave) autoSave = false
-					else autoSave = true
-				},
 				selectType: function (x) {
 					this.type = x
-					this.btn = { GET: false, POST: false, PUT: false, DELETE: false, PATCH: false }
+					this.btn = { GET: false, POST: false, PUT: false, DELETE: false }
 
 					if (x == 'GET') this.btn.GET = true
 					else if (x == 'POST') this.btn.POST = true
 					else if (x == 'PUT') this.btn.PUT = true
 					else if (x == 'DELETE') this.btn.DELETE = true
-					else if (x == 'PATCH') this.btn.PATCH = true
+				
 					this.generateCode()
 				},
 				addParam: function () {
-					this.params.push({ name: '', type: 'TEXT' });
+					this.params.push({ name: '' });
 					this.generateCode()
 				},
 				generateCode: function () {
 					this.output = ''
 					this.output += '$app->' + this.type.toLowerCase()
-					this.output += '("{{url}}", function (Request $request, Response $response, $args) { \n'
+					this.output += '("{{url}}", function (Request $request, Response $response'
 
 					if (this.type == 'GET') {
+						this.output += ', $args) { \n\n'
 						for (i = 0; i < this.params.length; i++) {
-							this.output += '	$' + this.params[i].name + ' = $request->getAttribute("' + this.params[i].name + '");\n'
+
+							if (this.filter)
+								this.output += '\t$' + this.params[i].name + ' = filter_var($request->getAttribute("' + this.params[i].name + '"), FILTER_SANITIZE_STRING);\n'
+							else
+								this.output += '\t$' + this.params[i].name + ' = $request->getAttribute("' + this.params[i].name + '");\n'
+
 						}
-					}else if (this.type == 'POST'){
+
+					} else if (this.type == 'POST') {
+						this.output += ') { \n\n'
+						this.output += '\t$data = $request->getParsedBody();\n'
 						for (i = 0; i < this.params.length; i++) {
-							this.output += '	$' + this.params[i].name + ' = $request->getAttribute("' + this.params[i].name + '");\n'
+
+							if (this.filter)
+								this.output += '\t$' + this.params[i].name + ' = filter_var($data["' + this.params[i].name + '"], FILTER_SANITIZE_STRING);\n'
+							else
+								this.output += '\t$' + this.params[i].name + ' = $data["' + this.params[i].name + '"];\n'
 						}
+
 					}
 
 					this.output = this.output.replace('{{url}}', this.root + '/' + this.funName + '/')
-					this.output += '\n\n   $response->getBody()->write("Hello");\n'
-					this.output += '   return $response;\n'
+
+					this.output += '\n\n\t$result = [];\n'
+					this.output += '\treturn $response->withjson($result, 200);\n'
 					this.output += '});\n'
 
 					setTimeout(function () { Prism.highlightAll(); }, 0);
@@ -160,6 +181,7 @@
 		if (localStorage.tempData != undefined && localStorage.tempData != "undefined") {
 			temp = JSON.parse(localStorage.tempData)
 			app._data.autoSave = temp.autoSave
+			app._data.filter = temp.filter
 			app._data.btn = temp.btn
 			app._data.root = temp.root
 			app._data.funName = temp.funName
@@ -169,8 +191,6 @@
 		}
 
 		app.generateCode()
-    // https://github.com/Ahrengot/Monokai-theme-for-Prism.js
-	// https://schier.co/blog/2013/01/07/how-to-re-run-prismjs-on-ajax-content.html
 	</script>
 </body>
 
