@@ -3,7 +3,7 @@
 <head>
 	<title>X___X</title>
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-	<link rel="stylesheet" type="text/css" href="https://www.samclarke.com/assets/migrating-to-hugo/monokai.css">
+	<link href="https://www.samclarke.com/assets/migrating-to-hugo/monokai.css" rel="stylesheet" >
 </head>
 <body>
 
@@ -19,7 +19,7 @@
 		<div class="col-md-5">
 			<div class="form-group">
 				<div class="form-inline">
-					<label>Http Method : </label>
+					<label>Method : </label>
 					<button v-on:click="selectType('GET');"   v-bind:class="{ 'btn btn-success' : btn.GET,    'btn btn-default': !btn.GET }">GET</button>
 					<button v-on:click="selectType('POST')"   v-bind:class="{ 'btn btn-success' : btn.POST,   'btn btn-default': !btn.POST }">POST</button>
 					<button v-on:click="selectType('PUT')"    v-bind:class="{ 'btn btn-success' : btn.PUT,    'btn btn-default': !btn.PUT }">PUT</button>
@@ -50,7 +50,7 @@
 
 			<div class="form-group">
 				<div v-for="item in params" class="form-group">
-					<input v-model="item.name" v-on:keyup="generateCode" class="form-control" placeholder="Param Name" required>
+					<input v-model="item.name" v-on:keyup="generateCode(); save();" class="form-control" placeholder="Param Name" required>
 				</div>
 			</div>
 		</div>
@@ -58,7 +58,7 @@
 		<div class="col-md-7">
 			<div class="form-group">
 				<div v-if="output!=''" class="row">
-					<pre><code class="language-php" v-html="output"></code></pre>
+					<pre style="height: 350px;"><code class="language-php" v-html="output"></code></pre>
 				</div> 
 			</div>
 		</div>	
@@ -93,31 +93,48 @@
 				else if(x=='DELETE') this.btn.DELETE = true
 				else if(x=='PATCH') this.btn.PATCH = true
 
-				app.generateCode()
+				this.generateCode()
+				this.save()
 			},
 			addParam: function(){
 				this.params.push( { name:'', type:'TEXT' } );
-				app.generateCode()
+				this.generateCode()
+				this.save()
 			},
 			generateCode: function(){
-				app.output  = ''
-				app.output += '$app->' + app.type.toLowerCase()
-				app.output += '("{{url}}", function (Request $request, Response $response, $args) { \n'
+				this.output  = ''
+				this.output += '$app->' + this.type.toLowerCase()
+				this.output += '("{{url}}", function (Request $request, Response $response, $args) { \n'
 
-				for( i = 0; i < app.params.length-1; i++) {
-					app.output += '	$'+ app.params[i].name +' = $request->getAttribute("'+ app.params[i].name +'");\n'
+				for( i = 0; i < this.params.length; i++) {
+					this.output += '	$'+ this.params[i].name +' = $request->getAttribute("'+ this.params[i].name +'");\n'
 				}
 				
-				app.output = app.output.replace('{{url}}', app.root + '/' + app.funName + '/')
-				app.output += '   $response->getBody()->write("Hello");\n'
-				app.output += '   return $response;\n'
-				app.output += '});\n'
+				this.output = this.output.replace('{{url}}', this.root + '/' + this.funName + '/')
+				this.output += '\n\n   $response->getBody()->write("Hello");\n'
+				this.output += '   return $response;\n'
+				this.output += '});\n'
 
-				setTimeout(function(){ Prism.highlightAll() }, 0);
+				setTimeout(function(){ Prism.highlightAll(); }, 0);
+				if (localStorage.tempData == undefined) { this.save() }
+			},
+			save: function(){
+				localStorage.tempData = JSON.stringify(this._data)
 			}
 		}
 	});
+
 	app.generateCode()
+
+	if (localStorage.tempData != undefined) {
+		temp = JSON.parse(localStorage.tempData)
+		app._data.btn = temp.btn
+		app._data.root = temp.root
+		app._data.funName = temp.funName
+		app._data.type = temp.type
+		app._data.params = temp.params
+		app._data.output = temp.output
+	}
 
     // https://github.com/Ahrengot/Monokai-theme-for-Prism.js
 	// https://schier.co/blog/2013/01/07/how-to-re-run-prismjs-on-ajax-content.html
