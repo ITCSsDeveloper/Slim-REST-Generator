@@ -1,143 +1,177 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>X___X</title>
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-	<link href="https://www.samclarke.com/assets/migrating-to-hugo/monokai.css" rel="stylesheet" >
-</head>
-<body>
-
-<div id="app" class="container">
-	<div class="row">
-		<div class="col-md-12">
-			<h1>Slim REST Generator</h1>
-		</div>
-	</div>
-
-	<hr>
-	<div class="row">
-		<div class="col-md-5">
-			<div class="form-group">
-				<div class="form-inline">
-					<label>Method : </label>
-					<button v-on:click="selectType('GET');"   v-bind:class="{ 'btn btn-success' : btn.GET,    'btn btn-default': !btn.GET }">GET</button>
-					<button v-on:click="selectType('POST')"   v-bind:class="{ 'btn btn-success' : btn.POST,   'btn btn-default': !btn.POST }">POST</button>
-					<button v-on:click="selectType('PUT')"    v-bind:class="{ 'btn btn-success' : btn.PUT,    'btn btn-default': !btn.PUT }">PUT</button>
-					<button v-on:click="selectType('DELETE')" v-bind:class="{ 'btn btn-success' : btn.DELETE, 'btn btn-default': !btn.DELETE }">DELETE</button>
-					<button v-on:click="selectType('PATCH')"  v-bind:class="{ 'btn btn-success' : btn.PATCH,  'btn btn-default': !btn.PATCH }">PATCH</button>
-				</div>
-			</div>
-
-			<div class="form-group">
-				<div class="form-inline">
-					<label>Root : </label>
-					<input v-model="root" v-on:keyup="generateCode" class="form-control" placeholder="Function Name" required>
-				</div>
-			</div>
-
-			<div class="form-group">
-				<div class="form-inline">
-					<label>Function Name : </label>
-					<input v-model="funName" v-on:keyup="generateCode" class="form-control" placeholder="Function Name" required>
-				</div>
-			</div>
-
-			<div class="form-group">
-				<div class="form-inline">
-					<a href="#" v-on:click="addParam"><span class="glyphicon glyphicon-plus"></span> Add Parmas</a>
-				</div>
-			</div>
-
-			<div class="form-group">
-				<div v-for="item in params" class="form-group">
-					<input v-model="item.name" v-on:keyup="generateCode(); save();" class="form-control" placeholder="Param Name" required>
-				</div>
-			</div>
-		</div>
-
-		<div class="col-md-7">
-			<div class="form-group">
-				<div v-if="output!=''" class="row">
-					<pre style="height: 350px;"><code class="language-php" v-html="output"></code></pre>
-				</div> 
-			</div>
-		</div>	
-	</div>
-</div> <!-- End Of Container -->
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.4/vue.js"></script>
-<script type="text/javascript" src="https://www.samclarke.com/js/prism.js"></script>
-
-<script>
-	Vue.config.silent = false
-
-	var app = new Vue({
-		el: '#app',
-		data: {
-			btn: { GET : false, POST : false, PUT : false, DELETE : false, PATCH : false },
-			root: 'root',
-			funName: 'hello',
-			type : '',
-			params: [],
-			output: ''
-		},
-		methods: {
-			selectType: function(x){
-				this.type = x
-				this.btn = { GET : false, POST : false, PUT : false, DELETE : false, PATCH : false }
-
-				if(x=='GET') this.btn.GET = true
-				else if(x=='POST') this.btn.POST = true
-				else if(x=='PUT') this.btn.PUT = true
-				else if(x=='DELETE') this.btn.DELETE = true
-				else if(x=='PATCH') this.btn.PATCH = true
-
-				this.generateCode()
-				this.save()
-			},
-			addParam: function(){
-				this.params.push( { name:'', type:'TEXT' } );
-				this.generateCode()
-				this.save()
-			},
-			generateCode: function(){
-				this.output  = ''
-				this.output += '$app->' + this.type.toLowerCase()
-				this.output += '("{{url}}", function (Request $request, Response $response, $args) { \n'
-
-				for( i = 0; i < this.params.length; i++) {
-					this.output += '	$'+ this.params[i].name +' = $request->getAttribute("'+ this.params[i].name +'");\n'
-				}
-				
-				this.output = this.output.replace('{{url}}', this.root + '/' + this.funName + '/')
-				this.output += '\n\n   $response->getBody()->write("Hello");\n'
-				this.output += '   return $response;\n'
-				this.output += '});\n'
-
-				setTimeout(function(){ Prism.highlightAll(); }, 0);
-				if (localStorage.tempData == undefined) { this.save() }
-			},
-			save: function(){
-				localStorage.tempData = JSON.stringify(this._data)
-			}
+	<link href="https://www.samclarke.com/assets/migrating-to-hugo/monokai.css" rel="stylesheet">
+	<style>
+		.btn {
+			width: 83.5px !important;
 		}
-	});
+	</style>
+</head>
 
-	app.generateCode()
+<body>
+	<div id="app" class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<h1>Slim REST Generator</h1>
+			</div>
+		</div>
 
-	if (localStorage.tempData != undefined) {
-		temp = JSON.parse(localStorage.tempData)
-		app._data.btn = temp.btn
-		app._data.root = temp.root
-		app._data.funName = temp.funName
-		app._data.type = temp.type
-		app._data.params = temp.params
-		app._data.output = temp.output
-	}
+		<hr>
+		<div class="row">
+			<div class="col-md-6">
+				<div class="form-group">
+					<div class="form-inline">
+						<label>Save to Local Storage : </label>
+						<input v-model="autoSave" v-bind:id="autoSave" v-on:click="save" type="checkbox" />
+						<button v-on:click="reset" class="btn btn-sm btn-danger pull-right">Reset</button>
+					</div>
+				</div>
 
+
+				<div class="form-group">
+					<div class="form-inline">
+						<label>Request Method : </label>
+						<button v-on:click="selectType('GET');" v-bind:class="{ 'btn  btn-success' : btn.GET,    'btn btn-default': !btn.GET }">GET</button>
+						<button v-on:click="selectType('POST')" v-bind:class="{ 'btn btn-success' : btn.POST,   'btn btn-default': !btn.POST }">POST</button>
+						<button v-on:click="selectType('PUT')" v-bind:class="{ 'btn btn-success' : btn.PUT,    'btn btn-default': !btn.PUT }">PUT</button>
+						<button v-on:click="selectType('DELETE')" v-bind:class="{ 'btn btn-success' : btn.DELETE, 'btn btn-default': !btn.DELETE }">DELETE</button>
+						<button v-on:click="selectType('PATCH')" v-bind:class="{ 'btn btn-success' : btn.PATCH,  'btn btn-default': !btn.PATCH }">PATCH</button>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="form-inline">
+						<label>Controller Name : </label>
+						<input v-model="root" v-on:keyup="generateCode" class="form-control" placeholder="Controller Name" required>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="form-inline">
+						<label>Function Name : </label>
+						<input v-model="funName" v-on:keyup="generateCode" class="form-control" placeholder="Function Name" required>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="form-inline">
+						<a href="#" v-on:click="addParam"><span class="glyphicon glyphicon-plus"></span> Add Parmas</a>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div v-for="item in params" class="form-group">
+						<input v-model="item.name" v-on:keyup="generateCode(); save();" class="form-control" placeholder="Param Name" required>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-6">
+				<div class="form-group">
+					<div v-if="output!=''" class="row">
+						<pre style="height: 350px;"><code class="language-php" v-html="output"></code></pre>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Of Container -->
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.4/vue.js"></script>
+	<script src="https://www.samclarke.com/js/prism.js"></script>
+
+	<script>
+		var app = new Vue({
+			el: '#app',
+			data: {
+				autoSave: false,
+				btn: { GET: false, POST: false, PUT: false, DELETE: false, PATCH: false },
+				root: '',
+				funName: '',
+				type: '',
+				params: [],
+				output: ''
+			},
+			methods: {
+				toggleAutoSave: function () {
+					if (autoSave) autoSave = false
+					else autoSave = true
+				},
+				selectType: function (x) {
+					this.type = x
+					this.btn = { GET: false, POST: false, PUT: false, DELETE: false, PATCH: false }
+
+					if (x == 'GET') this.btn.GET = true
+					else if (x == 'POST') this.btn.POST = true
+					else if (x == 'PUT') this.btn.PUT = true
+					else if (x == 'DELETE') this.btn.DELETE = true
+					else if (x == 'PATCH') this.btn.PATCH = true
+					this.generateCode()
+				},
+				addParam: function () {
+					this.params.push({ name: '', type: 'TEXT' });
+					this.generateCode()
+				},
+				generateCode: function () {
+					this.output = ''
+					this.output += '$app->' + this.type.toLowerCase()
+					this.output += '("{{url}}", function (Request $request, Response $response, $args) { \n'
+
+					if (this.type == 'GET') {
+						for (i = 0; i < this.params.length; i++) {
+							this.output += '	$' + this.params[i].name + ' = $request->getAttribute("' + this.params[i].name + '");\n'
+						}
+					}else if (this.type == 'POST'){
+						for (i = 0; i < this.params.length; i++) {
+							this.output += '	$' + this.params[i].name + ' = $request->getAttribute("' + this.params[i].name + '");\n'
+						}
+					}
+
+					this.output = this.output.replace('{{url}}', this.root + '/' + this.funName + '/')
+					this.output += '\n\n   $response->getBody()->write("Hello");\n'
+					this.output += '   return $response;\n'
+					this.output += '});\n'
+
+					setTimeout(function () { Prism.highlightAll(); }, 0);
+					this.save()
+				},
+				save: function () {
+					if (this.autoSave) {
+						localStorage.tempData = JSON.stringify(this._data)
+					}
+					else {
+						localStorage.tempData = undefined
+					}
+				},
+				clear: function () {
+					localStorage.tempData = undefined
+				},
+				reset: function () {
+					this.clear()
+					location.reload()
+				}
+			}
+		});
+
+		if (localStorage.tempData != undefined && localStorage.tempData != "undefined") {
+			temp = JSON.parse(localStorage.tempData)
+			app._data.autoSave = temp.autoSave
+			app._data.btn = temp.btn
+			app._data.root = temp.root
+			app._data.funName = temp.funName
+			app._data.type = temp.type
+			app._data.params = temp.params
+			app._data.output = temp.output
+		}
+
+		app.generateCode()
     // https://github.com/Ahrengot/Monokai-theme-for-Prism.js
 	// https://schier.co/blog/2013/01/07/how-to-re-run-prismjs-on-ajax-content.html
-</script>
+	</script>
 </body>
+
 </html>
