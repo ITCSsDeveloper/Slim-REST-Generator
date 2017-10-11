@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>X----X</title>
+</head>
+<body>
+
+<a href="http://www.siamhtml.com/introduction-to-web-components/"> Ref : http://www.siamhtml.com/introduction-to-web-components/</a>
+<div id="follow-me"></div>
+
+<template id="follow-me-template">
+    <style>
+        .followme {
+            width: 100%;
+            padding: 0px 20px 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .followme > a {
+            display: block;
+            text-decoration: none;
+        }
+    </style>
+    <div class="followme">
+        <h3>Follow me</h3>
+        <a href="https://www.facebook.com/siamhtml">facebook</a>
+        <a href="https://twitter.com/SuranartN">twitter</a>        
+    </div>
+</template>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.4/vue.js"></script>
+<script>
+	var widget = document.getElementById('follow-me');
+	var template = document.getElementById("follow-me-template");
+	widget.innerHTML = template.innerHTML;
+</script>
+</body>
+</html>
