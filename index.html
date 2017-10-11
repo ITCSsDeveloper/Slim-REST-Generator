@@ -107,19 +107,21 @@
 	<script src="https://www.samclarke.com/js/prism.js"></script>
 
 	<script>
+		var data = {
+			autoSave: true,
+			filter: false,
+			tryCatch: false,
+			btn: { GET: false, POST: false, PUT: false, DELETE: false },
+			root: '',
+			funName: '',
+			type: '',
+			params: [],
+			output: ''
+		}
+
 		var app = new Vue({
 			el: '#app',
-			data: {
-				autoSave: true,
-				filter: false,
-				tryCatch: false,
-				btn: { GET: false, POST: false, PUT: false, DELETE: false },
-				root: '',
-				funName: '',
-				type: '',
-				params: [],
-				output: ''
-			},
+			data: data,
 			methods: {
 				selectType: function (x) {
 					this.type = x
@@ -127,8 +129,8 @@
 
 					if (x == 'GET') this.btn.GET = true
 					else if (x == 'POST') this.btn.POST = true
-					else if (x == 'PUT') this.btn.PUT = true
-					else if (x == 'DELETE') this.btn.DELETE = true
+					//else if (x == 'PUT') this.btn.PUT = true
+					//else if (x == 'DELETE') this.btn.DELETE = true
 
 					this.generateCode()
 				},
@@ -206,7 +208,8 @@
 				},
 			},
 			mounted: function () {
-				if (localStorage.tempData != undefined && localStorage.tempData != "undefined") {
+				console.log(localStorage.tempData)
+				if (localStorage.tempData !== 'undefined') {
 					temp = JSON.parse(localStorage.tempData)
 					this.tryCatch = temp.tryCatch
 					this.autoSave = temp.autoSave
@@ -223,4 +226,5 @@
 		});
 	</script>
 </body>
+
 </html>
