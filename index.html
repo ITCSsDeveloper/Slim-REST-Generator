@@ -107,7 +107,7 @@
 	<script src="https://www.samclarke.com/js/prism.js"></script>
 
 	<script>
-		var data = {
+		var _data = {
 			autoSave: true,
 			filter: false,
 			tryCatch: false,
@@ -121,7 +121,7 @@
 
 		var app = new Vue({
 			el: '#app',
-			data: data,
+			data: _data,
 			methods: {
 				selectType: function (x) {
 					this.type = x
@@ -208,20 +208,23 @@
 				},
 			},
 			mounted: function () {
-				console.log(localStorage.tempData)
-				if (localStorage.tempData !== 'undefined') {
-					temp = JSON.parse(localStorage.tempData)
-					this.tryCatch = temp.tryCatch
-					this.autoSave = temp.autoSave
-					this.filter = temp.filter
-					this.btn = temp.btn
-					this.root = temp.root
-					this.funName = temp.funName
-					this.type = temp.type
-					this.params = temp.params
-					this.output = temp.output
+				try {
+					if (localStorage.tempData !== 'undefined') {
+						temp = JSON.parse(localStorage.tempData)
+						this.tryCatch = temp.tryCatch
+						this.autoSave = temp.autoSave
+						this.filter = temp.filter
+						this.btn = temp.btn
+						this.root = temp.root
+						this.funName = temp.funName
+						this.type = temp.type
+						this.params = temp.params
+						this.output = temp.output
+					}
 				}
-				this.generateCode()
+				catch (err) {
+					this.generateCode()
+				}
 			}
 		});
 	</script>
