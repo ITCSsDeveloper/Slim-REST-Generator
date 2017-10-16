@@ -3,4 +3,4 @@
 Demo : https://itcss-web-preview.firebaseapp.com/Slim%20REST%20Generator/#
 
 # Screenshot
-![Slim-REST-Generator](https://user-images.githubusercontent.com/24679901/31395339-bde7ae78-ae0a-11e7-9e9e-bec58415b09b.png)
+![Slim-REST-Generator v2](https://user-images.githubusercontent.com/24679901/31617369-34c35e40-b2b9-11e7-99f8-d7bab0af0421.png)
