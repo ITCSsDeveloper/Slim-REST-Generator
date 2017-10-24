@@ -6,12 +6,17 @@
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 	<link href="https://www.samclarke.com/assets/migrating-to-hugo/monokai.css" rel="stylesheet">
 	<style>
+
 		.btn {
 			width: 83.5px !important;
 		}
 		.data-input {
 			margin-right: 5px !important;
 			margin-left: 5px !important;
+		}
+
+		.input-group {
+			margin-bottom: 1.5px;
 		}
 	</style>
 
@@ -54,29 +59,33 @@
 				</div>
 
 
-				<div class="form-group">
-					<div class="form-inline">
-						<label>Request Method : </label>
-						<button v-on:click="selectType('GET');" v-bind:class="{ 'btn  btn-success' : btn.GET,    'btn btn-default': !btn.GET }">GET</button>
-						<button v-on:click="selectType('POST')" v-bind:class="{ 'btn btn-success' : btn.POST,   'btn btn-default': !btn.POST }">POST</button>
-						<button v-on:click="selectType('PUT')" v-bind:class="{ 'btn btn-success' : btn.PUT,    'btn btn-default': !btn.PUT }" disabled>PUT</button>
-						<button v-on:click="selectType('DELETE')" v-bind:class="{ 'btn btn-success' : btn.DELETE, 'btn btn-default': !btn.DELETE }"
-						 disabled>DELETE</button>
+				<div class="input-group">
+					<span class="input-group-addon" style="text-align: left;">Request Method</span>
+					<div class="btn-group btn-group-justified">
+						<div class="btn-group">
+							<button v-on:click="selectType('GET');" v-bind:class="{ 'btn btn-success' : btn.GET, 'btn btn-default': !btn.GET }">GET</button>
+						</div>
+						<div class="btn-group">
+							<button v-on:click="selectType('POST')" v-bind:class="{ 'btn btn-success' : btn.POST, 'btn btn-default': !btn.POST }">POST</button>
+						</div>
+						<div class="btn-group">
+							<button v-on:click="selectType('PUT')" v-bind:class="{ 'btn btn-success' : btn.PUT, 'btn btn-default': !btn.PUT }" disabled>PUT</button>
+						</div>
+						<div class="btn-group">
+							<button v-on:click="selectType('DELETE')" v-bind:class="{ 'btn btn-success' : btn.DELETE, 'btn btn-default': !btn.DELETE }"
+							 disabled>DELETE</button>
+						</div>
 					</div>
 				</div>
 
-				<div class="form-group">
-					<div class="form-inline">
-						<label>Controller Name : </label>
-						<input v-model="root" v-on:keyup="generateCode" class="form-control" placeholder="Controller Name" required>
-					</div>
+				<div class="input-group">
+					<span class="input-group-addon">Controller Name</span>
+					<input v-model="root" v-on:keyup="generateCode()" class="form-control" placeholder="Controller Name" required>
 				</div>
 
-				<div class="form-group">
-					<div class="form-inline">
-						<label>Function Name : </label>
-						<input v-model="funName" v-on:keyup="generateCode" class="form-control" placeholder="Function Name" required>
-					</div>
+				<div class="input-group">
+					<span class="input-group-addon" style="padding-right: 19px;">Function Name</span>
+					<input v-model="funName" v-on:keyup="generateCode()" class="form-control" placeholder="Function Name" required>
 				</div>
 
 				<div class="form-group">
@@ -86,9 +95,14 @@
 					</div>
 				</div>
 
-				<div class="form-group">
-					<div v-for="item in params" class="form-group">
+				<div v-for="item in params">
+					<div class="input-group">
 						<input v-model="item.name" v-on:keyup="generateCode(); save();" class="form-control" placeholder="Param Name" required>
+						<div class="input-group-btn">
+							<button v-on:click="delParam(item);" class="btn btn-danger">
+								<i class="glyphicon glyphicon-trash"></i>
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -106,8 +120,8 @@
 					<strong> GitHub :</strong>
 					<a href="https://github.com/ITCSsDeveloper/Slim-REST-Generator" target="_blank">https://github.com/ITCSsDeveloper/Slim-REST-Generator</a>
 				</div>
-
 			</div>
+			<!--  Div Display Code  -->
 		</div>
 	</div>
 	<!-- End Of Container -->
@@ -116,7 +130,7 @@
 	<script src="https://www.samclarke.com/js/prism.js"></script>
 
 	<script>
-		var data = {
+		var _data = {
 			autoSave: true,
 			filter: false,
 			tryCatch: false,
@@ -130,7 +144,7 @@
 
 		var app = new Vue({
 			el: '#app',
-			data: data,
+			data: _data,
 			methods: {
 				selectType: function (x) {
 					this.type = x
@@ -200,6 +214,10 @@
 					setTimeout(function () { Prism.highlightAll(); }, 0);
 					this.save()
 				},
+				delParam: function (_item) {
+					this.params.splice(_item, 1)
+					this.generateCode()
+				},
 				save: function () {
 					if (this.autoSave) {
 						localStorage.tempData = JSON.stringify(this._data)
@@ -217,20 +235,24 @@
 				},
 			},
 			mounted: function () {
-				console.log(localStorage.tempData)
-				if (localStorage.tempData !== 'undefined') {
-					temp = JSON.parse(localStorage.tempData)
-					this.tryCatch = temp.tryCatch
-					this.autoSave = temp.autoSave
-					this.filter = temp.filter
-					this.btn = temp.btn
-					this.root = temp.root
-					this.funName = temp.funName
-					this.type = temp.type
-					this.params = temp.params
-					this.output = temp.output
+				try {
+					if (localStorage.tempData !== 'undefined') {
+						temp = JSON.parse(localStorage.tempData)
+						this.tryCatch = temp.tryCatch
+						this.autoSave = temp.autoSave
+						this.filter = temp.filter
+						this.btn = temp.btn
+						this.root = temp.root
+						this.funName = temp.funName
+						this.type = temp.type
+						this.params = temp.params
+						this.output = temp.output
+						temp = null
+					}
 				}
-				this.generateCode()
+				catch (err) {
+					this.generateCode()
+				}
 			}
 		});
 	</script>
